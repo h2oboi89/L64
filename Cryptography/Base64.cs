@@ -13,7 +13,8 @@ namespace Cryptography
 
         public static string Decode(string input)
         {
-            throw new NotImplementedException("test me");
+            var bytes = System.Convert.FromBase64String(input);
+            return System.Text.Encoding.UTF8.GetString(bytes);
         }
     }
 }
