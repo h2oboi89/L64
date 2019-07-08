@@ -11,7 +11,7 @@ namespace Tests
             var input = "Hello, World!";
             var result = input.Shuffle();
 
-            Assert.AreNotEqual("Hello, World!", result);
+            Assert.AreNotEqual(input, result);
             Assert.AreNotSame(result, input);
         }
     }
