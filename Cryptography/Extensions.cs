@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Security.Cryptography;
 
 namespace Cryptography
 {
@@ -6,18 +8,17 @@ namespace Cryptography
     {
         public static string Shuffle(this string input)
         {
-            var random = new Random();
-            var array = input.ToCharArray();
-
-            for (var i = array.Length - 1; i > 1; i--)
+            using (var rnd = new RNGCryptoServiceProvider())
             {
-                var j = random.Next(0, i);
-                var temp = array[i];
-                array[i] = array[j];
-                array[j] = temp;
+                return new string(input.ToCharArray().OrderBy(x => rnd.GetNextInt32()).ToArray());
             }
+        }
 
-            return new string(array);
+        public static int GetNextInt32(this RNGCryptoServiceProvider rnd)
+        {
+            var randomInt = new byte[4];
+            rnd.GetBytes(randomInt);
+            return BitConverter.ToInt32(randomInt, 0);
         }
     }
 }
