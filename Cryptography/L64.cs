@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 
 namespace Cryptography
 {
@@ -9,10 +8,6 @@ namespace Cryptography
 
         private static readonly int _matrixLength = (int)Math.Sqrt(_alphabet.Length); // 8 (Sqrt of 64)
 
-        private char[,] _matrix = new char[_matrixLength, _matrixLength];
-
-        private int _i, _j;
-
         private static int _ConvertCharToInt(char c)
         {
             return _alphabet.IndexOf(c);
@@ -20,18 +15,21 @@ namespace Cryptography
 
         public static string GenerateKey() => _alphabet.Shuffle();
 
-        private void _InitializeState(string key)
+        private static (char[,] matrix, int i, int j) _InitializeState(string key)
         {
+            var matrix = new char[_matrixLength, _matrixLength];
+            var i = 0;
+            var j = 0;
+
             for (var r = 0; r < _matrixLength; r++)
             {
                 for (var c = 0; c < _matrixLength; c++)
                 {
-                    this._matrix[r, c] = key[(r * _matrixLength) + c];
+                    matrix[r, c] = key[(r * _matrixLength) + c];
                 }
             }
 
-            this._i = 0;
-            this._j = 0;
+            return (matrix, i, j);
         }
 
         private static void _CheckKey(string key)
@@ -42,41 +40,41 @@ namespace Cryptography
             }
         }
 
-        private void _RotateRight(int pRow)
+        private static void _RotateRight(ref char[,] matrix, int pRow)
         {
             var lastIndex = _matrixLength - 1;
 
-            var temp = this._matrix[pRow, lastIndex];
+            var temp = matrix[pRow, lastIndex];
 
             for (var i = lastIndex; i > 0; i--)
             {
-                this._matrix[pRow, i] = this._matrix[pRow, i - 1];
+                matrix[pRow, i] = matrix[pRow, i - 1];
             }
 
-            this._matrix[pRow, 0] = temp;
+            matrix[pRow, 0] = temp;
         }
 
-        private void _RotateDown(int cCol)
+        private static void _RotateDown(ref char[,] matrix, int cCol)
         {
             var lastIndex = _matrixLength - 1;
 
-            var temp = this._matrix[lastIndex, cCol];
+            var temp = matrix[lastIndex, cCol];
 
             for (var i = lastIndex; i > 0; i--)
             {
-                this._matrix[i, cCol] = this._matrix[i - 1, cCol];
+                matrix[i, cCol] = matrix[i - 1, cCol];
             }
 
-            this._matrix[0, cCol] = temp;
+            matrix[0, cCol] = temp;
         }
 
-        private (int row, int column) _FindChar(char c)
+        private static (int row, int column) _FindChar(char[,] matrix, char c)
         {
             for (var row = 0; row < _matrixLength; row++)
             {
                 for (var col = 0; col < _matrixLength; col++)
                 {
-                    if (this._matrix[row, col] == c)
+                    if (matrix[row, col] == c)
                     {
                         return (row, col);
                     }
@@ -87,62 +85,84 @@ namespace Cryptography
             throw new Exception($"Invalid character {c}, expected character in alphabet: ${_alphabet}");
         }
 
-        private char _Encrypt(char p)
+        private static int MathMod(int a, int b)
         {
-            (var pRow, var pCol) = _FindChar(p);
+            return (Math.Abs(a * b) + a) % b;
+        }
 
-            var cRow = pRow + ((_ConvertCharToInt(this._matrix[this._i, this._j]) / _matrixLength) % _matrixLength);
-            var cCol = pCol + ((_ConvertCharToInt(this._matrix[this._i, this._j]) % _matrixLength) % _matrixLength);
+        private static char _EncryptCharacter(ref char[,] matrix, ref int i, ref int j, char p)
+        {
+            (var pRow, var pCol) = _FindChar(matrix, p);
 
-            var c = this._matrix[cRow, cCol];
+            var cRow = MathMod(pRow + (_ConvertCharToInt(matrix[i, j]) / _matrixLength), _matrixLength);
+            var cCol = MathMod(pCol + MathMod(_ConvertCharToInt(matrix[i, j]), _matrixLength), _matrixLength);
 
-            this._RotateRight(pRow);
-            this._RotateDown(cCol);
+            var c = matrix[cRow, cCol];
 
-            this._i = (this._i + (_ConvertCharToInt(c) / _matrixLength)) % _matrixLength;
-            this._j = (this._j + (_ConvertCharToInt(c) % _matrixLength)) % _matrixLength;
+            _RotateRight(ref matrix, pRow);
+            _RotateDown(ref matrix, cCol);
+
+            i = (i + (_ConvertCharToInt(c) / _matrixLength)) % _matrixLength;
+            j = (j + (_ConvertCharToInt(c) % _matrixLength)) % _matrixLength;
 
             return c;
         }
 
-        public string Encrypt(string plainText, string key)
+        public static string Encrypt(string plainText, string key)
         {
             _CheckKey(key);
 
-            _InitializeState(key);
+            (var matrix, var i, var j) = _InitializeState(key);
+
+            while (plainText.Length % 3 != 0)
+            {
+                plainText += " ";
+            }
 
             plainText = Base64.Encode(plainText);
 
-            return plainText.Select(p => this._Encrypt(p)).ToString();
+            var cipherText = new char[plainText.Length];
+
+            for (var p = 0; p < plainText.Length; p++)
+            {
+                cipherText[p] = _EncryptCharacter(ref matrix, ref i, ref j, plainText[p]);
+            }
+
+            return new string(cipherText);
         }
 
-        private char _Decrypt(char c)
+        private static char _DecryptCharacter(ref char[,] matrix, ref int i, ref int j, char c)
         {
-            (var cRow, var cCol) = _FindChar(c);
+            (var cRow, var cCol) = _FindChar(matrix, c);
 
-            var pRow = cRow - ((_ConvertCharToInt(this._matrix[this._i, this._j]) / _matrixLength) % _matrixLength);
-            var pCol = cCol - ((_ConvertCharToInt(this._matrix[this._i, this._j]) % _matrixLength) % _matrixLength);
+            var pRow = MathMod(cRow - (_ConvertCharToInt(matrix[i, j]) / _matrixLength), _matrixLength);
+            var pCol = MathMod(cCol - MathMod(_ConvertCharToInt(matrix[i, j]), _matrixLength), _matrixLength);
 
-            var p = this._matrix[pRow, pCol];
+            var p = matrix[pRow, pCol];
 
-            this._RotateRight(pRow);
-            this._RotateDown(cCol);
+            _RotateRight(ref matrix, pRow);
+            _RotateDown(ref matrix, cCol);
 
-            this._i = (this._i + (_ConvertCharToInt(c) / _matrixLength)) % _matrixLength;
-            this._j = (this._j + (_ConvertCharToInt(c) % _matrixLength)) % _matrixLength;
+            i = (i + (_ConvertCharToInt(c) / _matrixLength)) % _matrixLength;
+            j = (j + (_ConvertCharToInt(c) % _matrixLength)) % _matrixLength;
 
             return p;
         }
 
-        public string Decrypt(string cipherText, string key)
+        public static string Decrypt(string cipherText, string key)
         {
             _CheckKey(key);
 
-            _InitializeState(key);
+            (var matrix, var i, var j) = _InitializeState(key);
 
-            var plainText = cipherText.Select(c => this._Decrypt(c)).ToString();
+            var plainText = new char[cipherText.Length];
 
-            return Base64.Decode(plainText);
+            for (var c = 0; c < cipherText.Length; c++)
+            {
+                plainText[c] = _DecryptCharacter(ref matrix, ref i, ref j, cipherText[c]);
+            }
+
+            return Base64.Decode(new string(plainText)).TrimEnd();
         }
     }
 }
