@@ -1,5 +1,3 @@
-using System;
-
 namespace Cryptography
 {
     public static class Base64
@@ -15,7 +13,7 @@ namespace Cryptography
         {
             var bytes = System.Convert.FromBase64String(input);
 
-            return System.Text.Encoding.UTF8.GetString(bytes);
+            return System.Text.Encoding.ASCII.GetString(bytes);
         }
     }
 }
