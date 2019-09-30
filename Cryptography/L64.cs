@@ -156,17 +156,18 @@ namespace Cryptography
         {
             (var pRow, var pCol) = _FindChar(matrix, plaintextChar);
 
-            var marker = _ConvertCharToInt(matrix[i, j]);
-            var cRow = MathMod(pRow + (marker / _matrixLength), _matrixLength);
-            var cCol = MathMod(pCol + MathMod(marker, _matrixLength), _matrixLength);
+            var stateInt = _ConvertCharToInt(matrix[i, j]);
+            var cRow = MathMod(pRow + (stateInt / _matrixLength), _matrixLength);
+            var cCol = MathMod(pCol + MathMod(stateInt, _matrixLength), _matrixLength);
 
             var cipherChar = matrix[cRow, cCol];
 
             _RotateRight(ref matrix, pRow);
             _RotateDown(ref matrix, cCol);
 
-            i = (i + (_ConvertCharToInt(cipherChar) / _matrixLength)) % _matrixLength;
-            j = (j + (_ConvertCharToInt(cipherChar) % _matrixLength)) % _matrixLength;
+            var cipherInt = _ConvertCharToInt(cipherChar);
+            i = (i + (cipherInt / _matrixLength)) % _matrixLength;
+            j = (j + (cipherInt % _matrixLength)) % _matrixLength;
 
             return cipherChar;
         }
@@ -213,17 +214,18 @@ namespace Cryptography
         {
             (var cRow, var cCol) = _FindChar(matrix, cipherChar);
 
-            var marker = _ConvertCharToInt(matrix[i, j]);
-            var pRow = MathMod(cRow - (marker / _matrixLength), _matrixLength);
-            var pCol = MathMod(cCol - MathMod(marker, _matrixLength), _matrixLength);
+            var stateInt = _ConvertCharToInt(matrix[i, j]);
+            var pRow = MathMod(cRow - (stateInt / _matrixLength), _matrixLength);
+            var pCol = MathMod(cCol - MathMod(stateInt, _matrixLength), _matrixLength);
 
             var plaintextChar = matrix[pRow, pCol];
 
             _RotateRight(ref matrix, pRow);
             _RotateDown(ref matrix, cCol);
 
-            i = (i + (_ConvertCharToInt(cipherChar) / _matrixLength)) % _matrixLength;
-            j = (j + (_ConvertCharToInt(cipherChar) % _matrixLength)) % _matrixLength;
+            var cipherInt = _ConvertCharToInt(cipherChar);
+            i = (i + (cipherInt / _matrixLength)) % _matrixLength;
+            j = (j + (cipherInt % _matrixLength)) % _matrixLength;
 
             return plaintextChar;
         }
