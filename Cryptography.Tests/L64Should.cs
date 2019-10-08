@@ -13,16 +13,31 @@ namespace Tests
             var key = L64.GenerateKey();
 
             var cipherText = L64.Encrypt(plainText, key);
-            var decrypted = L64.Decrypt(cipherText, key);
+            var decrypted = L64.Decrypt(cipherText, key).Trim();
 
-            Assert.AreNotEqual(plainText, cipherText);
-            Assert.AreNotSame(plainText, cipherText);
+            Assert.That(plainText, Is.Not.EqualTo(cipherText));
+            Assert.That(plainText, Is.Not.SameAs(cipherText));
 
-            Assert.AreEqual(plainText + "  ", decrypted);
-            Assert.AreNotSame(plainText, decrypted);
+            Assert.That(plainText, Is.EqualTo(decrypted));
+            Assert.That(plainText, Is.Not.SameAs(decrypted));
 
-            Assert.AreNotEqual(decrypted, cipherText);
-            Assert.AreNotSame(decrypted, cipherText);
+            Assert.That(decrypted, Is.Not.EqualTo(cipherText));
+            Assert.That(decrypted, Is.Not.SameAs(cipherText));
+        }
+
+        [Test]
+        public void FailToDecryptWithWrongKey()
+        {
+            var plainText = "Foo Bar";
+            var key = L64.GenerateKey();
+            var invalidKey = L64.GenerateKey();
+
+            Assert.That(key, Is.Not.EqualTo(invalidKey));
+            
+            var cipherText = L64.Encrypt(plainText, key);
+            var decrypted = L64.Decrypt(cipherText, invalidKey).Trim();
+
+            Assert.That(plainText, Is.Not.EqualTo(decrypted));
         }
 
         [Test]
@@ -34,43 +49,33 @@ namespace Tests
             var cipherText = L64.Encrypt(plainText, key);
             var decrypted = L64.Decrypt(cipherText, key);
 
-            Assert.AreNotEqual(plainText, cipherText);
-            Assert.AreNotSame(plainText, cipherText);
+            Assert.That(plainText, Is.Not.EqualTo(cipherText));
 
-            Assert.AreEqual(plainText, decrypted);
-            Assert.AreNotSame(plainText, decrypted);
-
-            Assert.AreNotEqual(decrypted, cipherText);
-            Assert.AreNotSame(decrypted, cipherText);
+            Assert.That(plainText, Is.EqualTo(decrypted));
         }
 
         [Test]
         public void EncryptAndDecryptEmptyString()
         {
-            var plainText = String.Empty;
+            var plainText = string.Empty;
             var key = L64.GenerateKey();
 
             var cipherText = L64.Encrypt(plainText, key);
             var decrypted = L64.Decrypt(cipherText, key);
 
-            Assert.AreEqual(plainText, cipherText);
-            Assert.AreSame(plainText, cipherText);
+            Assert.That(plainText, Is.EqualTo(cipherText));
 
-            Assert.AreEqual(plainText, decrypted);
-            Assert.AreSame(plainText, decrypted);
-
-            Assert.AreEqual(decrypted, cipherText);
-            Assert.AreSame(decrypted, cipherText);
+            Assert.That(plainText, Is.EqualTo(decrypted));
         }
 
         [Test]
         public void RejectInvalidKeys()
         {
-            var invalidKeys = new string[] { String.Empty, " ", "abcde" };
+            var invalidKeys = new string[] { string.Empty, " ", "abcde" };
 
             foreach (var invalidKey in invalidKeys)
             {
-                var ex = Assert.Throws<ArgumentException>(() => L64.Encrypt(String.Empty, invalidKey));
+                var ex = Assert.Throws<ArgumentException>(() => L64.Encrypt(string.Empty, invalidKey));
 
                 Assert.AreEqual(ex.Message, $"Invalid key: '{invalidKey}'. Expected a shuffled version of '+/0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'");
             }
