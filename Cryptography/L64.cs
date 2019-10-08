@@ -91,7 +91,7 @@ namespace Cryptography
         }
 
         /// <summary>
-        /// Rotates a column in the state matrix down by one 
+        /// Rotates a column in the state matrix down by one
         /// </summary>
         /// <param name="matrix">State matrix</param>
         /// <param name="col">Column to rotate</param>
