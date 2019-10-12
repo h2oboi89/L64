@@ -3,10 +3,11 @@ using Cryptography;
 
 namespace Tests
 {
-    public class Extensions_ShuffleShould
+    [TestFixture]
+    public class ExtensionsShould
     {
         [Test]
-        public void ReturnShuffledString()
+        public void ShuffleShouldShuffleString()
         {
             var input = "Hello, World!";
             var result = input.Shuffle();
