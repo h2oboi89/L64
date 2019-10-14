@@ -249,22 +249,22 @@ namespace Cryptography
         /// <param name="cipherText">Text to decrypt</param>
         /// <param name="key">Key to decrypt text with</param>
         /// <returns>Decrypted plaintext</returns>
-        public static string Decrypt(string cipherText, string key)
+        public static string Decrypt(string ciphertext, string key)
         {
-            if (cipherText == null)
+            if (ciphertext == null)
             {
-                throw new ArgumentNullException(nameof(cipherText));
+                throw new ArgumentNullException(nameof(ciphertext));
             }
 
             CheckKey(key);
 
             (var matrix, var i, var j) = InitializeState(key);
 
-            var plaintext = new char[cipherText.Length];
+            var plaintext = new char[ciphertext.Length];
 
-            for (var index = 0; index < cipherText.Length; index++)
+            for (var index = 0; index < ciphertext.Length; index++)
             {
-                plaintext[index] = DecryptCharacter(ref matrix, ref i, ref j, cipherText[index]);
+                plaintext[index] = DecryptCharacter(ref matrix, ref i, ref j, ciphertext[index]);
             }
 
             return Base64.Decode(new string(plaintext));

@@ -77,8 +77,17 @@ namespace UnitTests.Cryptography
             {
                 var ex = Assert.Throws<ArgumentException>(() => L64.Encrypt(string.Empty, invalidKey));
 
-                Assert.AreEqual(ex.Message, $"Invalid key: '{invalidKey}'. Expected a shuffled version of '+/0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'");
+                Assert.That(ex.Message, Is.EqualTo($"Invalid key: '{invalidKey}'. Expected a shuffled version of '+/0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'"));
             }
+
+            Assert.That(() => L64.Encrypt("pasta", null), Throws.ArgumentNullException.With.Property("ParamName").EqualTo("key"));
+        }
+
+        [Test]
+        public void RejectInvalidTexts()
+        {
+            Assert.That(() => L64.Encrypt(null, null), Throws.ArgumentNullException.With.Property("ParamName").EqualTo("plaintext"));
+            Assert.That(() => L64.Decrypt(null, null), Throws.ArgumentNullException.With.Property("ParamName").EqualTo("ciphertext"));
         }
     }
 }
