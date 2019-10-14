@@ -1,7 +1,7 @@
-﻿using NUnit.Framework;
-using Cryptography;
+﻿using Cryptography;
+using NUnit.Framework;
 
-namespace Cryptography.Tests
+namespace UnitTests.Cryptography
 {
     [TestFixture]
     public class Base64Should

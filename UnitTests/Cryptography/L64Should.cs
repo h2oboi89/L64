@@ -1,8 +1,8 @@
-using NUnit.Framework;
 using Cryptography;
+using NUnit.Framework;
 using System;
 
-namespace Tests
+namespace UnitTests.Cryptography
 {
     public class L64Should
     {
@@ -33,7 +33,7 @@ namespace Tests
             var invalidKey = L64.GenerateKey();
 
             Assert.That(key, Is.Not.EqualTo(invalidKey));
-            
+
             var cipherText = L64.Encrypt(plainText, key);
             var decrypted = L64.Decrypt(cipherText, invalidKey).Trim();
 

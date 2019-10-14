@@ -1,7 +1,7 @@
-using NUnit.Framework;
 using Cryptography;
+using NUnit.Framework;
 
-namespace Tests
+namespace UnitTests.Cryptography
 {
     [TestFixture]
     public class ExtensionsShould
