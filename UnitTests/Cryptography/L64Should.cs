@@ -1,8 +1,8 @@
-using NUnit.Framework;
 using Cryptography;
+using NUnit.Framework;
 using System;
 
-namespace Tests
+namespace UnitTests.Cryptography
 {
     public class L64Should
     {
@@ -33,7 +33,7 @@ namespace Tests
             var invalidKey = L64.GenerateKey();
 
             Assert.That(key, Is.Not.EqualTo(invalidKey));
-            
+
             var cipherText = L64.Encrypt(plainText, key);
             var decrypted = L64.Decrypt(cipherText, invalidKey).Trim();
 
@@ -77,8 +77,17 @@ namespace Tests
             {
                 var ex = Assert.Throws<ArgumentException>(() => L64.Encrypt(string.Empty, invalidKey));
 
-                Assert.AreEqual(ex.Message, $"Invalid key: '{invalidKey}'. Expected a shuffled version of '+/0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'");
+                Assert.That(ex.Message, Is.EqualTo($"Invalid key: '{invalidKey}'. Expected a shuffled version of '+/0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'"));
             }
+
+            Assert.That(() => L64.Encrypt("pasta", null), Throws.ArgumentNullException.With.Property("ParamName").EqualTo("key"));
+        }
+
+        [Test]
+        public void RejectInvalidTexts()
+        {
+            Assert.That(() => L64.Encrypt(null, null), Throws.ArgumentNullException.With.Property("ParamName").EqualTo("plaintext"));
+            Assert.That(() => L64.Decrypt(null, null), Throws.ArgumentNullException.With.Property("ParamName").EqualTo("ciphertext"));
         }
     }
 }

@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Linq;
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace Cryptography
 {
     /// <summary>
     /// Base64 extension of the LC4 encryption algorithm (https://eprint.iacr.org/2017/339)
     /// </summary>
-    public class L64
+    public static class L64
     {
         /// <summary>
         /// Alphabet used for encryption and decryption (Base64 character set w/o padding character)
         /// </summary>
-        private static readonly string _alphabet = "+/0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        private const string _alphabet = "+/0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
         /// <summary>
         /// Width / length of the matrix [8 (Sqrt of 64)]
@@ -24,7 +26,7 @@ namespace Cryptography
         /// </summary>
         /// <param name="c">Character to get integer value for</param>
         /// <returns>Integer value of specified character (index within alphabet).</returns>
-        private static int _ConvertCharToInt(char c)
+        private static int ConvertCharToInt(char c)
         {
             return _alphabet.IndexOf(c);
         }
@@ -35,6 +37,7 @@ namespace Cryptography
         /// <returns>Key for encryption.</returns>
         public static string GenerateKey() => _alphabet.Shuffle();
 
+
         /// <summary>
         /// Initializes the state matrix for encryption or decryption
         /// </summary>
@@ -42,8 +45,9 @@ namespace Cryptography
         /// <param name="i">Initial state row index</param>
         /// <param name="j">Initial state row column</param>
         /// <returns></returns>
-        private static (char[,] matrix, int i, int j) _InitializeState(string key)
+        private static (char[,] matrix, int i, int j) InitializeState(string key)
         {
+
             var matrix = new char[_matrixLength, _matrixLength];
             var i = 0;
             var j = 0;
@@ -63,9 +67,13 @@ namespace Cryptography
         /// Verifies that a key is valid
         /// </summary>
         /// <param name="key">Key to validate</param>
-        private static void _CheckKey(string key)
+        private static void CheckKey(string key)
         {
-            if (String.Concat(key.OrderBy(c => c)) != _alphabet)
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+            if (string.Concat(key.OrderBy(c => c)) != _alphabet)
             {
                 throw new ArgumentException($"Invalid key: '{key}'. Expected a shuffled version of '{_alphabet}'");
             }
@@ -76,7 +84,7 @@ namespace Cryptography
         /// </summary>
         /// <param name="matrix">State matrix</param>
         /// <param name="row">Row to rotate</param>
-        private static void _RotateRight(ref char[,] matrix, int row)
+        private static void RotateRight(ref char[,] matrix, int row)
         {
             var lastIndex = _matrixLength - 1;
 
@@ -95,7 +103,7 @@ namespace Cryptography
         /// </summary>
         /// <param name="matrix">State matrix</param>
         /// <param name="col">Column to rotate</param>
-        private static void _RotateDown(ref char[,] matrix, int col)
+        private static void RotateDown(ref char[,] matrix, int col)
         {
             var lastIndex = _matrixLength - 1;
 
@@ -115,7 +123,7 @@ namespace Cryptography
         /// <param name="row">Row index of character</param>
         /// <param name="column">Column index of character</param>
         /// <returns>Row and column indices of the desired character.</returns>
-        private static (int row, int column) _FindChar(char[,] matrix, char c)
+        private static (int row, int column) FindChar(char[,] matrix, char c)
         {
             for (var row = 0; row < _matrixLength; row++)
             {
@@ -152,20 +160,20 @@ namespace Cryptography
         /// <param name="j">State column index</param>
         /// <param name="plaintextChar">Character to encrypt</param>
         /// <returns>Encrypted ciphertext character</returns>
-        private static char _EncryptCharacter(ref char[,] matrix, ref int i, ref int j, char plaintextChar)
+        private static char EncryptCharacter(ref char[,] matrix, ref int i, ref int j, char plaintextChar)
         {
-            (var pRow, var pCol) = _FindChar(matrix, plaintextChar);
+            (var pRow, var pCol) = FindChar(matrix, plaintextChar);
 
-            var stateInt = _ConvertCharToInt(matrix[i, j]);
+            var stateInt = ConvertCharToInt(matrix[i, j]);
             var cRow = MathMod(pRow + (stateInt / _matrixLength), _matrixLength);
             var cCol = MathMod(pCol + MathMod(stateInt, _matrixLength), _matrixLength);
 
             var cipherChar = matrix[cRow, cCol];
 
-            _RotateRight(ref matrix, pRow);
-            _RotateDown(ref matrix, cCol);
+            RotateRight(ref matrix, pRow);
+            RotateDown(ref matrix, cCol);
 
-            var cipherInt = _ConvertCharToInt(cipherChar);
+            var cipherInt = ConvertCharToInt(cipherChar);
             i = (i + (cipherInt / _matrixLength)) % _matrixLength;
             j = (j + (cipherInt % _matrixLength)) % _matrixLength;
 
@@ -180,9 +188,14 @@ namespace Cryptography
         /// <returns>Encrypted ciphertext</returns>
         public static string Encrypt(string plaintext, string key)
         {
-            _CheckKey(key);
+            if (plaintext == null)
+            {
+                throw new ArgumentNullException(nameof(plaintext));
+            }
 
-            (var matrix, var i, var j) = _InitializeState(key);
+            CheckKey(key);
+
+            (var matrix, var i, var j) = InitializeState(key);
 
             // pad end with trailing spaces to avoid base64 padding character (=)
             while (plaintext.Length % 3 != 0)
@@ -196,7 +209,7 @@ namespace Cryptography
 
             for (var index = 0; index < plaintext.Length; index++)
             {
-                cipherText[index] = _EncryptCharacter(ref matrix, ref i, ref j, plaintext[index]);
+                cipherText[index] = EncryptCharacter(ref matrix, ref i, ref j, plaintext[index]);
             }
 
             return new string(cipherText);
@@ -210,20 +223,20 @@ namespace Cryptography
         /// <param name="j">State column index</param>
         /// <param name="cipherChar">Character to decrypt</param>
         /// <returns>Decrypted plaintext character</returns>
-        private static char _DecryptCharacter(ref char[,] matrix, ref int i, ref int j, char cipherChar)
+        private static char DecryptCharacter(ref char[,] matrix, ref int i, ref int j, char cipherChar)
         {
-            (var cRow, var cCol) = _FindChar(matrix, cipherChar);
+            (var cRow, var cCol) = FindChar(matrix, cipherChar);
 
-            var stateInt = _ConvertCharToInt(matrix[i, j]);
+            var stateInt = ConvertCharToInt(matrix[i, j]);
             var pRow = MathMod(cRow - (stateInt / _matrixLength), _matrixLength);
             var pCol = MathMod(cCol - MathMod(stateInt, _matrixLength), _matrixLength);
 
             var plaintextChar = matrix[pRow, pCol];
 
-            _RotateRight(ref matrix, pRow);
-            _RotateDown(ref matrix, cCol);
+            RotateRight(ref matrix, pRow);
+            RotateDown(ref matrix, cCol);
 
-            var cipherInt = _ConvertCharToInt(cipherChar);
+            var cipherInt = ConvertCharToInt(cipherChar);
             i = (i + (cipherInt / _matrixLength)) % _matrixLength;
             j = (j + (cipherInt % _matrixLength)) % _matrixLength;
 
@@ -236,20 +249,27 @@ namespace Cryptography
         /// <param name="cipherText">Text to decrypt</param>
         /// <param name="key">Key to decrypt text with</param>
         /// <returns>Decrypted plaintext</returns>
-        public static string Decrypt(string cipherText, string key)
+        public static string Decrypt(string ciphertext, string key)
         {
-            _CheckKey(key);
-
-            (var matrix, var i, var j) = _InitializeState(key);
-
-            var plaintext = new char[cipherText.Length];
-
-            for (var index = 0; index < cipherText.Length; index++)
+            if (ciphertext == null)
             {
-                plaintext[index] = _DecryptCharacter(ref matrix, ref i, ref j, cipherText[index]);
+                throw new ArgumentNullException(nameof(ciphertext));
+            }
+
+            CheckKey(key);
+
+            (var matrix, var i, var j) = InitializeState(key);
+
+            var plaintext = new char[ciphertext.Length];
+
+            for (var index = 0; index < ciphertext.Length; index++)
+            {
+                plaintext[index] = DecryptCharacter(ref matrix, ref i, ref j, ciphertext[index]);
             }
 
             return Base64.Decode(new string(plaintext));
         }
     }
 }
+
+#pragma warning restore CA1814 // Prefer jagged arrays over multidimensional
