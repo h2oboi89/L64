@@ -9,9 +9,8 @@ set COVERAGE_TOOL=.\packages\OpenCover.4.7.922\tools\OpenCover.Console.exe
 set COVERAGE_REPORT_TOOL=.\packages\ReportGenerator.4.3.0\tools\net47\ReportGenerator.exe
 
 set TDD_DLL=.\UnitTests\bin\Release\UnitTests.dll
-set COVERAGE_DIR=.\coverage
-set COVERAGE_REPORT=%COVERAGE_DIR%\OpenCoverResults.xml
-
+set OPEN_COVER_DIR=.\OpenCover
+set COVERAGE_REPORT=%OPEN_COVER_DIR%\OpenCoverResults.xml
 
 REM Build Solution
 %NUGET% restore
@@ -19,10 +18,11 @@ REM Build Solution
 %MSBUILD% L64.sln /v:q /nologo /t:Rebuild /p:Configuration=Release
 
 REM Reset Coverage Directory
-rd /s /q %COVERAGE_DIR%
-md %COVERAGE_DIR%
+rd /s /q %OPEN_COVER_DIR%
+md %OPEN_COVER_DIR%
 
-%COVERAGE_TOOL% -target:%TDD_TOOL% -targetargs:"%TDD_DLL% --work=%COVERAGE_DIR%" -register:user -output:%COVERAGE_REPORT%
+REM Run unit tests and code coverage
+%COVERAGE_TOOL% -target:%TDD_TOOL% -targetargs:"%TDD_DLL% --work=%OPEN_COVER_DIR%" -register:user -output:%COVERAGE_REPORT%
 
-%COVERAGE_REPORT_TOOL% -reports:%COVERAGE_REPORT% -targetdir:%COVERAGE_DIR% -assemblyFilters:-nunit.framework;-UnitTests
+%COVERAGE_REPORT_TOOL% -reports:%COVERAGE_REPORT% -targetdir:%OPEN_COVER_DIR% -assemblyFilters:-nunit.framework;-UnitTests
 
