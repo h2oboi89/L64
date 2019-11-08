@@ -41,10 +41,8 @@ namespace Cryptography
         /// <summary>
         /// Initializes the state matrix for encryption or decryption
         /// </summary>
-        /// <param name="matrix">Initialized state matrix</param>
-        /// <param name="i">Initial state row index</param>
-        /// <param name="j">Initial state row column</param>
-        /// <returns></returns>
+        /// <param name="key">key used to initialize state.</param>
+        /// <returns>Initialized state.</returns>
         private static (char[,] matrix, int i, int j) InitializeState(string key)
         {
 
@@ -120,8 +118,8 @@ namespace Cryptography
         /// <summary>
         /// Finds the specified character within the matrix.
         /// </summary>
-        /// <param name="row">Row index of character</param>
-        /// <param name="column">Column index of character</param>
+        /// <param name="matrix">matrix to find character in.</param>
+        /// <param name="c">character to find</param>
         /// <returns>Row and column indices of the desired character.</returns>
         private static (int row, int column) FindChar(char[,] matrix, char c)
         {
@@ -246,7 +244,7 @@ namespace Cryptography
         /// <summary>
         /// Decrypts ciphertext using the specified key.
         /// </summary>
-        /// <param name="cipherText">Text to decrypt</param>
+        /// <param name="ciphertext">Text to decrypt</param>
         /// <param name="key">Key to decrypt text with</param>
         /// <returns>Decrypted plaintext</returns>
         public static string Decrypt(string ciphertext, string key)
