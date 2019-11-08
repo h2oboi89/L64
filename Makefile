@@ -1,5 +1,5 @@
 ################################################################################
-# Makefile for building and cleaning the GEA3 Dlls.
+# Makefile for building and cleaning the solution.
 ################################################################################
 SHELL := C:\Windows\System32\cmd.exe
 ZIP_TOOL := 7z.exe
